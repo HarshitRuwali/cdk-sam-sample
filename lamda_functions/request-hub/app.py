@@ -12,21 +12,25 @@
 # print(lambda_handler("re" , req))
 
 import json
+import boto3
+client = boto3.client('lambda')
 def lambda_handler(event, context):
-
-    # response = client.invoke(
-    #     FunctionName = 'TravelJSONConnector',
-    #     InvocationType = 'RequestResponse',
-    #     Payload = json.dumps(inputParams)
-    # )
-
-
-    request = json.loads(event['body'])
-    resp = {
-        "output": request['url']
-    }
-    return {
-        "statusCode": 200,
-        "headers": {},
-        "body": json.dumps(resp)
-    }
+	print(event)
+	response = client.invoke(
+		FunctionName = 'TravelJSONConnector',
+		InvocationType = 'RequestResponse',
+		Payload = json.dumps(event)
+	)
+	responseFromTravelJSONConnector = json.load(response['Payload'])
+	# event = {
+	# 	"ProductName"   : "iPhone SE",
+	# 	"Quantity": 2,
+	# 	"UnitPrice"     : 499
+	# }
+	return{
+		"statusCode" : 200,
+		"headers": {},
+		"TransactionID": responseFromTravelJSONConnector['TransactionID'],
+		"ProductName": responseFromTravelJSONConnector['ProductName'],
+		"Amount": responseFromTravelJSONConnector["Amount"]
+	}

@@ -14,11 +14,11 @@ import uuid
 def lambda_handler(event, context):
 	productName = event['ProductName']
 	quantity = event['Quantity']
-	unitPrice   = event['UnitPrice']
-	ransactionId   = str(uuid.uuid1())
-	amount= quantity * unitPrice
+	unitPrice = event['UnitPrice']
+	transactionId = str(uuid.uuid1())
+	amount = quantity * unitPrice
 	return {
-	'TransactionID' :   transactionId,
-	'ProductName'   :   productName,
-	'Amount': amount
+        'TransactionID' : transactionId,
+        'ProductName' : productName,
+        'Amount' : amount
 	}

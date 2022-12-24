@@ -27,15 +27,21 @@ client = boto3.client('lambda')
 
 def lambda_handler(event,context):
 	inputParams = {
-		"ProductName"   : "iPhone SE",
-		"Quantity": 2,
-		"UnitPrice"     : 499
+        "ProductName": "iPhone SE",
+        "Quantity": 2,
+        "UnitPrice": 499
 	}
 	response = client.invoke(
 		FunctionName = 'TravelXmlConnector',
 		InvocationType = 'RequestResponse',
 		Payload = json.dumps(inputParams)
-	)
-	responseFromChild = json.load(response['Payload'])
+    )
+	responseFromTravelXmlConnector = json.load(response['Payload'])
 	print('\n')
-	print(responseFromChild)
+	print(responseFromTravelXmlConnector)
+	
+	return {
+        'TransactionID' : responseFromTravelXmlConnector['TransactionID'],
+        'ProductName' : responseFromTravelXmlConnector['ProductName'],
+        'Amount' : responseFromTravelXmlConnector['Amount']
+	}
