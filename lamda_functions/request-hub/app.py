@@ -13,6 +13,14 @@
 
 import json
 def lambda_handler(event, context):
+
+    # response = client.invoke(
+    #     FunctionName = 'TravelJSONConnector',
+    #     InvocationType = 'RequestResponse',
+    #     Payload = json.dumps(inputParams)
+    # )
+
+
     request = json.loads(event['body'])
     resp = {
         "output": request['url']
