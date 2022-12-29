@@ -14,11 +14,14 @@ import * as lambda from "@aws-cdk/aws-lambda";
 // import * as constructs from 'constructs';
 // declare const construct: constructs.Construct;
 
-import * as destinations from "@aws-cdk/aws-lambda-destinations";
+// import * as destinations from "@aws-cdk/aws-lambda-destinations";
 // declare const TravelXmlConnector: lambda.Function;
 
 import * as iam from '@aws-cdk/aws-iam';
 
+// import * as RequestAuthorizer from '@aws-cdk/RequestAuthorizer';
+// import { MockIntegration, PassthroughBehavior, RestApi, TokenAuthorizer } from '../../lib';
+// import * as RestApi from '@aws-cdk/aws-apigateway';
 export class CdkSamExampleStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -67,9 +70,9 @@ export class CdkSamExampleStack extends cdk.Stack {
         entrypoint: ["/lambda-entrypoint.sh"],
       }),
       // role: myRole,
-      onSuccess: new destinations.LambdaDestination(TravelXmlConnector, {
-        responseOnly: false,
-      })
+      // onSuccess: new destinations.LambdaDestination(TravelXmlConnector, {
+      //   responseOnly: false,
+      // })
     });
 
 
@@ -80,11 +83,18 @@ export class CdkSamExampleStack extends cdk.Stack {
         entrypoint: ["/lambda-entrypoint.sh"],
       }),
       // role: myRole,
-      onSuccess: new destinations.LambdaDestination(TravelJSONConnector, {
-        responseOnly: false,
-      }) 
+      // onSuccess: new destinations.LambdaDestination(TravelJSONConnector, {
+      //   responseOnly: false,
+      // }) 
     });
 
+    const authFunc = new lambda.DockerImageFunction(this, 'AuthorizationFunction',{
+      functionName: 'authFunc',
+      code: lambda.DockerImageCode.fromImageAsset(path.join(__dirname, '../lamda_functions/lambda-Code-Auth'), {
+        cmd: [ "app.handler" ],
+        entrypoint: ["/lambda-entrypoint.sh"],
+      })
+  })
     
     // adding lambda permissions for API gateway
     new lambda.CfnPermission(this, 'ApiGatewayPermission', {
@@ -99,13 +109,57 @@ export class CdkSamExampleStack extends cdk.Stack {
       description: "API gateway for Request hub",
     });
 
-    const resource = api.root.addResource("inference");
+    // const authorizer = new apigateway.RequestAuthorizer(this, 'MyAuthorizer', {
+    //   handler: RequestHubConnector,
+    //   identitySources: [apigateway.IdentitySource.header('Authorization'), apigateway.IdentitySource.queryString('allow')],
+    // });
+
+    // const resource = api.root.addResource("inference");
+    // const resource = api.root.addResource("inference");
+
+    // const invokeTokenAuthoriserRole = new iam.Role(this, 'Role', {
+    //   roleName: 'my-api-gateway-role',
+    //   assumedBy: new iam.ServicePrincipal('apigateway.amazonaws.com')
+    // });
+
+    // const invokeTokenAuthoriserPolicyStatement = new iam.PolicyStatement({
+    //   effect: iam.Effect.ALLOW,
+    //   sid: 'AllowInvokeLambda',
+    //   resources: ['*'], // or the ARN of your TokenAuthoriser  Lambda
+    //   actions: ['lambda:InvokeFunction']
+    // });
+    // const policy = new iam.Policy(this, 'Policy', {
+    //   policyName: 'my-api-gateway-policy',
+    //   roles: [invokeTokenAuthoriserRole],
+    //   statements: [invokeTokenAuthoriserPolicyStatement ]
+    // });
+
+    // const authorizer = new apigateway.TokenAuthorizer(this, 'TokenAuthoriser', {
+    //   handler: RequestHubConnector,
+    //   assumeRole: invokeTokenAuthoriserRole
+    // });
+
+
 
     // integrate the lambda with api gateway
-    const lambdaIntegration = new apigateway.LambdaIntegration(RequestHubConnector);
-    // add methods for api
-    resource.addMethod("POST", lambdaIntegration);
-    resource.addMethod("GET", lambdaIntegration);
+    // const lambdaIntegration = new apigateway.LambdaIntegration(RequestHubConnector);
+
+    // const authLambda = new apigateway.LambdaIntegration(authFunc);
+
+    const auth = new apigateway.TokenAuthorizer(this,'NewRequestAuthorizer',{
+      handler:authFunc
+    });
+    // // add methods for api
+    api.root.addMethod("POST", new apigateway.LambdaIntegration(RequestHubConnector), {
+      authorizer:auth
+    });
+    // resource.addMethod("GET", lambdaIntegration);
+
+    // this will add an endpoint to the api sever with the name in .addResouce
+    // resource.addResource('endpoint').addMethod('POST', lambdaIntegration, {
+    //   authorizer
+    // })
+    // resource.addMethod("POST", new apigateway.LambdaIntegration())
 
     const statement = new iam.PolicyStatement();
     statement.addActions("lambda:InvokeFunction");

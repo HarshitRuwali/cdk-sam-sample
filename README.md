@@ -19,7 +19,7 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 Sample POST request to the api endpoint.   
 
 ```
-event = {
+{
 	"ProductName" : "iPhone 14",
 	"Quantity" : 2,
 	"UnitPrice" : 14000
